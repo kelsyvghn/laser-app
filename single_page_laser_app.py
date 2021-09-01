@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import math as m
 # from main import *
+from calibration import *
+
 
 # running webcam
 # feed = cv2.VideoCapture(1)
@@ -176,8 +178,8 @@ def get_video_feed(video):
 
         if not is_grabbed:
             break
-
-        frame, triangulation = get_detected_rings(frame)
+        undistorted_frame = calibration(frame)
+        frame, triangulation = get_detected_rings(undistorted_frame)
         # print('the frame pixels', frame)
         # coins = get_detected_rings(coin_image)
         # frame = get_detected_lanes(frame)
