@@ -143,11 +143,11 @@ def get_detected_rings(image):
 
     # turn image to greyscale
     grey_image = cv2.cvtColor(masked_outer, cv2.COLOR_BGR2GRAY)
-    # cv2.imwrite('Media/grey_image1.jpg', grey_image)
+    cv2.imwrite('Test/grey_image1.jpg', grey_image)
 
     # use Canny's edge detection to detect edges
     canny_image = cv2.Canny(grey_image, 7, 9)
-    # cv2.imwrite('canny_image.jpg', canny_image)
+    cv2.imwrite('Test/canny_image.jpg', canny_image)
 
     # add and apply mask to the image (not written yet)
 
@@ -178,8 +178,9 @@ def get_video_feed(video):
 
         if not is_grabbed:
             break
-        undistorted_frame = calibration(frame)
-        frame, triangulation = get_detected_rings(undistorted_frame)
+            # need to callibrate camera before this runs
+        # undistorted_frame = calibration(frame)
+        frame, triangulation = get_detected_rings(frame)
         # print('the frame pixels', frame)
         # coins = get_detected_rings(coin_image)
         # frame = get_detected_lanes(frame)

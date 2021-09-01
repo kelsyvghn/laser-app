@@ -60,7 +60,7 @@ def calibration(image):
     # crop the image
     x, y, w, h = roi
     dst = dst[y:y + h, x:x + w]
-    # cv.imwrite('caliResult1.jpg', dst)
+    cv.imwrite('Test/caliResult1.jpg', dst)
 
     # Undistort with Remapping
     mapx, mapy = cv.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w, h), 5)
@@ -70,7 +70,7 @@ def calibration(image):
     x, y, w, h = roi
     dst = dst[y:y + h, x:x + w]
 
-    # cv.imwrite('caliResult2.png', dst)
+    cv.imwrite('Test/caliResult2.jpg', dst)
 
     # Reprojection Error
     mean_error = 0
