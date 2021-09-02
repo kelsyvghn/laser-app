@@ -1,9 +1,7 @@
 import cv2
 import numpy as np
 import math as m
-# from main import *
-from calibration import *
-
+import glob
 
 # running webcam
 # feed = cv2.VideoCapture(1)
@@ -12,14 +10,13 @@ feed = cv2.VideoCapture('/Users/kelsyvaughn/Local/Code/Laser_App/Media/MyOutputV
 
 
 def triangulate_circles(coordinates, copy):
-
     while len(coordinates) >= 2:
 
-        for i in range(len(coordinates)-1):
+        for i in range(len(coordinates) - 1):
             x1 = coordinates[i][0]
             y1 = coordinates[i][1]
-            x2 = coordinates[i+1][0]
-            y2 = coordinates[i+1][1]
+            x2 = coordinates[i + 1][0]
+            y2 = coordinates[i + 1][1]
         angle = 60
         ax = x2 - x1
         by = y2 - y1
@@ -32,7 +29,6 @@ def triangulate_circles(coordinates, copy):
 
 
 def get_point(x1, y1, x2, y2, image):
-
     # express coordinates of the point (x2, y2) with respect to point (x1, y1)
     dx = x2 - x1
     dy = y2 - y1
@@ -69,7 +65,6 @@ def get_point(x1, y1, x2, y2, image):
 
 # draw circles onto the video frames, image by image
 def draw_the_circles(image, circles):
-
     print('circles', circles)
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
@@ -106,11 +101,11 @@ def get_detected_rings(image):
 
     # turn image to greyscale
     grey_image = cv2.cvtColor(masked_outer, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite('Test/grey_image1.jpg', grey_image)
+    # cv2.imwrite('Test/grey_image1.jpg', grey_image)
 
     # use Canny's edge detection to detect edges
     canny_image = cv2.Canny(grey_image, 7, 9)
-    cv2.imwrite('Test/canny_image.jpg', canny_image)
+    # cv2.imwrite('Test/canny_image.jpg', canny_image)
 
     # generate circles on the image
     circles = cv2.HoughCircles(canny_image, cv2.HOUGH_GRADIENT, 2.75, 75, param1=300, param2=150, minRadius=10,
@@ -125,6 +120,80 @@ def get_detected_rings(image):
     return triangulated, image_with_circles
 
 
+def calibration(frame_input):
+    chessboardSize = (4, 3)
+    frameSize = (640, 480)
+
+    # termination criteria
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+    # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+    objp = np.zeros((chessboardSize[0] * chessboardSize[1], 3), np.float32)
+    objp[:, :2] = np.mgrid[0:chessboardSize[0], 0:chessboardSize[1]].T.reshape(-1, 2)
+
+    # Arrays to store object points and image points from all the images.
+    objpoints = []  # 3d point in real world space
+    imgpoints = []  # 2d points in image plane.
+
+    images = glob.glob('*.jpg')
+
+    for image in images:
+
+        img = cv2.imread(image)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Find the chess board corners
+        ret, corners = cv2.findChessboardCorners(gray, chessboardSize, None)
+
+        # If found, add object points, image points (after refining them)
+        if ret:
+            objpoints.append(objp)
+            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+            imgpoints.append(corners)
+
+            # Draw and display the corners
+            cv2.drawChessboardCorners(img, chessboardSize, corners2, ret)
+            cv2.imshow('img', img)
+            cv2.waitKey(1000)
+
+    cv2.destroyAllWindows()
+
+    ret, cameraMatrix, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
+    # print('input frame type', type(frame_input))
+    img = frame_input
+    h, w = img.shape[:2]
+    newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, dist, (w, h), 1, (w, h))
+
+    # Undistort
+    dst = cv2.undistort(img, cameraMatrix, dist, None, newCameraMatrix)
+
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y + h, x:x + w]
+    # cv2.imwrite('Test/caliResult1.png', dst)
+
+    # Undistort with Remapping
+    mapx, mapy = cv2.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w, h), 5)
+    dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y + h, x:x + w]
+    # cv2.imwrite('Test/caliResult2.png', dst)
+
+    # Reprojection Error
+    mean_error = 0
+
+    for i in range(len(objpoints)):
+        imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], cameraMatrix, dist)
+        error = cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2) / len(imgpoints2)
+        mean_error += error
+
+    print("total error: {}".format(mean_error / len(objpoints)))
+
+    return dst
+
+
 def get_video_feed(video):
     while video.isOpened():
 
@@ -132,9 +201,9 @@ def get_video_feed(video):
 
         if not is_grabbed:
             break
-            # need to callibrate camera before this runs
-        # undistorted_frame = calibration(frame)
-        frame, triangulation = get_detected_rings(frame)
+        dst_image = calibration(frame)
+        # need to calibrate camera before this runs
+        frame, triangulation = get_detected_rings(dst_image)
 
         video.release()
         return triangulation, frame

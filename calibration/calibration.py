@@ -47,8 +47,9 @@ cv.destroyAllWindows()
 ret, cameraMatrix, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
 
 ############## UNDISTORTION #####################################################
-
+print('input type', )
 img = cv.imread('cali5.jpg')
+print('input type', img)
 h, w = img.shape[:2]
 newCameraMatrix, roi = cv.getOptimalNewCameraMatrix(cameraMatrix, dist, (w, h), 1, (w, h))
 
