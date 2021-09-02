@@ -2,11 +2,13 @@ import cv2
 import numpy as np
 import math as m
 import glob
+import tkinter
+
 
 # running webcam
 # feed = cv2.VideoCapture(1)
 # running internal video
-feed = cv2.VideoCapture('/Users/kelsyvaughn/Local/Code/Laser_App/Media/MyOutputVid6.avi')
+# feed = cv2.VideoCapture('/Users/kelsyvaughn/Local/Code/Laser_App/Media/MyOutputVid6.avi')
 
 
 def triangulate_circles(coordinates, copy):
@@ -21,11 +23,12 @@ def triangulate_circles(coordinates, copy):
         ax = x2 - x1
         by = y2 - y1
         d = m.sqrt(m.pow(ax, 2) + m.pow(by, 2) - (2 * ax * by) * m.cos(angle)) * 81.73 / 1000
+        # print('d is', d)
 
         x3, y3, image = get_point(x1, y1, x2, y2, copy)
-        return x3, y3, image
+        return x3, y3, image, d
     else:
-        return 0, 0, copy
+        return 0, 0, copy, 0
 
 
 def get_point(x1, y1, x2, y2, image):
@@ -65,7 +68,7 @@ def get_point(x1, y1, x2, y2, image):
 
 # draw circles onto the video frames, image by image
 def draw_the_circles(image, circles):
-    print('circles', circles)
+    # print('circles', circles)
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
         circles = np.round(circles[0, :]).astype("int")
@@ -73,13 +76,13 @@ def draw_the_circles(image, circles):
         for (x, y, r) in circles:
             cv2.circle(image, (x, y), r, (0, 255, 0), 2)
             cv2.rectangle(image, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-        x, y, image = triangulate_circles(circles, image)
-        cv2.imshow('circles outlined', image)
+        x, y, image, dist = triangulate_circles(circles, image)
+        # cv2.imshow('circles outlined', image)
         circles = x, y
-        return circles, image
+        return circles, image, dist
     elif circles is None:
         print('there were no circles found')
-        return circles, image
+        return circles, image, 0
 
 
 # method for getting rings on the given frame
@@ -101,7 +104,7 @@ def get_detected_rings(image):
 
     # turn image to greyscale
     grey_image = cv2.cvtColor(masked_outer, cv2.COLOR_BGR2GRAY)
-    # cv2.imwrite('Test/grey_image1.jpg', grey_image)
+    # cv2.imwrite('Test/grey_image.jpg', grey_image)
 
     # use Canny's edge detection to detect edges
     canny_image = cv2.Canny(grey_image, 7, 9)
@@ -110,14 +113,13 @@ def get_detected_rings(image):
     # generate circles on the image
     circles = cv2.HoughCircles(canny_image, cv2.HOUGH_GRADIENT, 2.75, 75, param1=300, param2=150, minRadius=10,
                                maxRadius=30)
-
     # convert to uint
     circles = np.uint16(np.around(circles))
+    triangulated, image_with_circles, dist = draw_the_circles(image, circles)
+    # cv2.imwrite('Test/generated_circles.jpg', image_with_circles)
+    # cv2.imshow('generated circles', image_with_circles)
 
-    triangulated, image_with_circles = draw_the_circles(image, circles)
-    cv2.imshow('generated circles', image_with_circles)
-
-    return triangulated, image_with_circles
+    return triangulated, image_with_circles, dist
 
 
 def calibration(frame_input):
@@ -153,8 +155,8 @@ def calibration(frame_input):
 
             # Draw and display the corners
             cv2.drawChessboardCorners(img, chessboardSize, corners2, ret)
-            cv2.imshow('img', img)
-            cv2.waitKey(1000)
+            # cv2.imshow('img', img)
+            # cv2.waitKey(1000)
 
     cv2.destroyAllWindows()
 
@@ -189,12 +191,13 @@ def calibration(frame_input):
         error = cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2) / len(imgpoints2)
         mean_error += error
 
-    print("total error: {}".format(mean_error / len(objpoints)))
+    # print("total error: {}".format(mean_error / len(objpoints)))
 
     return dst
 
 
-def get_video_feed(video):
+def get_video_feed(selection):
+    video = cv2.VideoCapture(selection)
     while video.isOpened():
 
         is_grabbed, frame = video.read()
@@ -203,11 +206,16 @@ def get_video_feed(video):
             break
         dst_image = calibration(frame)
         # need to calibrate camera before this runs
-        frame, triangulation = get_detected_rings(dst_image)
+        triangulation, frame, dist = get_detected_rings(dst_image)
+        # cv2.imshow('generated circles feed', frame)
+        # cv2.waitKey(0)
+        results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
+            round((dist * 0.2645833333), 3)) + 'mm'
 
-        video.release()
-        return triangulation, frame
+        # video.release()
+        text = "Video Feed Processing"
+        return triangulation, frame,  text, results
 
 
-get_circles = get_video_feed(feed)
+# get_circles = get_video_feed(feed)
 cv2.destroyAllWindows()
