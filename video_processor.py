@@ -161,6 +161,7 @@ class MyVideoCapture:
             else:
                 return ret, None
         else:
+            ret = 'Fail'
             return ret, None
 
     # Release the video source when the object is destroyed

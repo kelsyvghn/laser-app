@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import math as m
-# from main import *
+import glob
 
 # running webcam
 # feed = cv2.VideoCapture(1)
@@ -10,44 +10,25 @@ feed = cv2.VideoCapture('/Users/kelsyvaughn/Local/Code/Laser_App/Media/MyOutputV
 
 
 def triangulate_circles(coordinates, copy):
-    # find length of the coordinates value
-    # cycle through coordinates to find best ones to use
-    # print('these are the coordinates: ', coordinates)
-    # if there are more than 3 values
     while len(coordinates) >= 2:
 
-    # if len(coordinates) >= 2:
-    #     # x1 = coordinates[0][0]
-    #     # x2 = coordinates[1][0]
-    #     # y1 = coordinates[0][1]
-    #     # y2 = coordinates[1][1]
-        for i in range(len(coordinates)-1):
+        for i in range(len(coordinates) - 1):
             x1 = coordinates[i][0]
             y1 = coordinates[i][1]
-            x2 = coordinates[i+1][0]
-            y2 = coordinates[i+1][1]
-        # calculation the distance between two circle centers using known angle (equilateral triangle, so 60)
+            x2 = coordinates[i + 1][0]
+            y2 = coordinates[i + 1][1]
         angle = 60
         ax = x2 - x1
         by = y2 - y1
         d = m.sqrt(m.pow(ax, 2) + m.pow(by, 2) - (2 * ax * by) * m.cos(angle)) * 81.73 / 1000
-    #     print('distance between two circles: ', d)
-    #     # print('the distance between the coordinates: ', d)
-    #     # calculate the coordinates to the center circle/camera center
-    #     # # the x3 y3 coordinates are calculated as follows
-    #     # cv2.imshow('triangulated circles', copy)
-    #     # cv2.waitKey(0)
+
         x3, y3, image = get_point(x1, y1, x2, y2, copy)
         return x3, y3, image
     else:
-    # else:
-    #     print('there was not enough information to complete this request', coordinates)
         return 0, 0, copy
 
 
 def get_point(x1, y1, x2, y2, image):
-    # print('the given center values are : ', (x1, y1, x2, y2))
-
     # express coordinates of the point (x2, y2) with respect to point (x1, y1)
     dx = x2 - x1
     dy = y2 - y1
@@ -57,20 +38,14 @@ def get_point(x1, y1, x2, y2, image):
     xp = x1 + m.cos(alpha) * dx + m.sin(alpha) * dy
     yp = y1 + m.sin(-alpha) * dx + m.cos(alpha) * dy
 
-    # print('the xp and yp are: ', (xp, yp))
     # if the above are out of range, ie they're outside the mask, process the inverse
-    # first we need to verify that the xp and yp are out of the masking bounds - the triangulation point
-    # the masking range is (200, 100) (600, 500) so out of bounds would be 200 < x < 600 and 100 < y < 500
-    #
     if xp < 200 or xp > 600 or yp < 100 or yp > 500:
         xp = x1 + m.cos(alpha) * dx + m.sin(-alpha) * dy
         yp = y1 + m.sin(alpha) * dx + m.cos(alpha) * dy
 
     xp = int(xp)
     yp = int(yp)
-    # print('the new xp and yp are: ', (xp, yp))
 
-    # calculate the centroid of the triangle if the points are on opposite sides
     # Formula to calculate centroid
     cx = int(round((x1 + x2 + xp) / 3, 2))
     cy = int(round((y1 + y2 + yp) / 3, 2))
@@ -84,22 +59,12 @@ def get_point(x1, y1, x2, y2, image):
     cv2.putText(image, "Centroid of Triangle: ", (cx - 25, cy - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                 (255, 255, 0),
                 2)
-    # cv2.imshow('Triangulation Image', image)
-    # cv2.imwrite('triangulation.jpg', image)
-    # cv2.waitKey(0)
+
     return xp, yp, image
 
 
-# video = several frames (images shown after each other)
 # draw circles onto the video frames, image by image
 def draw_the_circles(image, circles):
-    # for i in circles[0, :]:
-    #     # outer circle
-    #     cv2.circle(image, (i[0], i[1]), i[2], (0, 255, 0), 2)
-    #
-    #     # center of circle
-    #     cv2.circle(image, (i[0], i[1]), 2, (0, 255, 0), 3)
-    #     # cv2.rectangle(image, (i[0] - 5, i[1] - 5), (i[0] + 5, i[1] + 5), (0, 128, 255), -1)
     print('circles', circles)
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
@@ -109,11 +74,9 @@ def draw_the_circles(image, circles):
             cv2.circle(image, (x, y), r, (0, 255, 0), 2)
             cv2.rectangle(image, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
         x, y, image = triangulate_circles(circles, image)
-        # print('the calculated triangulation is: ', triangulation)
         cv2.imshow('circles outlined', image)
         circles = x, y
         return circles, image
-        # cv2.waitKey(0)
     elif circles is None:
         print('there were no circles found')
         return circles, image
@@ -121,11 +84,9 @@ def draw_the_circles(image, circles):
 
 # method for getting rings on the given frame
 def get_detected_rings(image):
-    # (height, width) = (image.shape[0], image.shape[1])
     # blur image a bit to tone down brightness
     blur = cv2.GaussianBlur(image, (15, 15), 1)
-    # lower_green = np.array([10, 10, 0])
-    # upper_green = np.array([25, 25, 255])
+
     lower_green = np.array([10, 10, 0])
     upper_green = np.array([25, 25, 255])
     mask = cv2.inRange(blur, lower_green, upper_green)
@@ -133,34 +94,25 @@ def get_detected_rings(image):
 
     # mask outer area
     height, width, rgb = image.shape
-    # video is 1280, 720
+
     x = np.zeros([height, width], dtype='uint8')
     mask_outer = cv2.rectangle(x, (100, 100), (450, 450), (255, 255, 255), -1)
-    # mask = cv2.rectangle(x, (0, 0), (width, height), (255, 255, 255), -1)
     masked_outer = cv2.bitwise_and(masked_image, masked_image, mask=mask_outer)
 
     # turn image to greyscale
     grey_image = cv2.cvtColor(masked_outer, cv2.COLOR_BGR2GRAY)
-    # cv2.imwrite('Media/grey_image1.jpg', grey_image)
+    # cv2.imwrite('Test/grey_image1.jpg', grey_image)
 
     # use Canny's edge detection to detect edges
     canny_image = cv2.Canny(grey_image, 7, 9)
-    # cv2.imwrite('canny_image.jpg', canny_image)
-
-    # add and apply mask to the image (not written yet)
+    # cv2.imwrite('Test/canny_image.jpg', canny_image)
 
     # generate circles on the image
-    # circles = cv2.HoughCircles(canny_image, cv2.HOUGH_GRADIENT, 2.75, 1.5, param1=300, param2=100, minRadius=0,
-    #                            maxRadius=45)
     circles = cv2.HoughCircles(canny_image, cv2.HOUGH_GRADIENT, 2.75, 75, param1=300, param2=150, minRadius=10,
                                maxRadius=30)
-    # circles = cv2.HoughCircles(canny_image, cv2.HOUGH_GRADIENT, 1, 120, param1=100, param2=30, minRadius=5,
-    # maxRadius=0)
 
     # convert to uint
     circles = np.uint16(np.around(circles))
-
-    # generate circles onto the image with another method
 
     triangulated, image_with_circles = draw_the_circles(image, circles)
     cv2.imshow('generated circles', image_with_circles)
@@ -168,22 +120,91 @@ def get_detected_rings(image):
     return triangulated, image_with_circles
 
 
+def calibration(frame_input):
+    chessboardSize = (4, 3)
+    frameSize = (640, 480)
+
+    # termination criteria
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+    # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+    objp = np.zeros((chessboardSize[0] * chessboardSize[1], 3), np.float32)
+    objp[:, :2] = np.mgrid[0:chessboardSize[0], 0:chessboardSize[1]].T.reshape(-1, 2)
+
+    # Arrays to store object points and image points from all the images.
+    objpoints = []  # 3d point in real world space
+    imgpoints = []  # 2d points in image plane.
+
+    images = glob.glob('*.jpg')
+
+    for image in images:
+
+        img = cv2.imread(image)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Find the chess board corners
+        ret, corners = cv2.findChessboardCorners(gray, chessboardSize, None)
+
+        # If found, add object points, image points (after refining them)
+        if ret:
+            objpoints.append(objp)
+            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+            imgpoints.append(corners)
+
+            # Draw and display the corners
+            cv2.drawChessboardCorners(img, chessboardSize, corners2, ret)
+            cv2.imshow('img', img)
+            cv2.waitKey(1000)
+
+    cv2.destroyAllWindows()
+
+    ret, cameraMatrix, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
+    # print('input frame type', type(frame_input))
+    img = frame_input
+    h, w = img.shape[:2]
+    newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, dist, (w, h), 1, (w, h))
+
+    # Undistort
+    dst = cv2.undistort(img, cameraMatrix, dist, None, newCameraMatrix)
+
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y + h, x:x + w]
+    # cv2.imwrite('Test/caliResult1.png', dst)
+
+    # Undistort with Remapping
+    mapx, mapy = cv2.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w, h), 5)
+    dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y + h, x:x + w]
+    # cv2.imwrite('Test/caliResult2.png', dst)
+
+    # Reprojection Error
+    mean_error = 0
+
+    for i in range(len(objpoints)):
+        imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], cameraMatrix, dist)
+        error = cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2) / len(imgpoints2)
+        mean_error += error
+
+    print("total error: {}".format(mean_error / len(objpoints)))
+
+    return dst
+
+
 def get_video_feed(video):
-    # the code below opens the video, grabs it frame by frame and then runs the above methods on the frames
     while video.isOpened():
 
         is_grabbed, frame = video.read()
 
         if not is_grabbed:
             break
+        dst_image = calibration(frame)
+        # need to calibrate camera before this runs
+        frame, triangulation = get_detected_rings(dst_image)
 
-        frame, triangulation = get_detected_rings(frame)
-        # print('the frame pixels', frame)
-        # coins = get_detected_rings(coin_image)
-        # frame = get_detected_lanes(frame)
-        # height, width = frame.shape
-        # cv2.imshow("Circle Detection Video", frame)
-        # cv2.waitKey(0)
         video.release()
         return triangulation, frame
 
