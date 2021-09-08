@@ -5,6 +5,7 @@ import glob
 
 
 def triangulate_circles(coordinates, copy):
+    # print('coordinates passed through', coordinates)
     # create an if statement that allows for if len(coordinates is < 2 OR if the user has provided coordinates
     while len(coordinates) >= 2:
 
@@ -20,9 +21,12 @@ def triangulate_circles(coordinates, copy):
         # print('d is', d)
 
         x3, y3, image = get_point(x1, y1, x2, y2, copy)
-        return x3, y3, image, d
+        cv2.putText(image, f'coordinates: {x3, y3}.', (x3, y3), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 1)
+        results = (x3, y3, image, d, coordinates)
+        return results
     else:
-        return 0, 0, copy, 0
+        results = None
+        return results
 
 
 def get_point(x1, y1, x2, y2, image):
@@ -78,13 +82,13 @@ def draw_the_circles(image, circles):
         # this next function call passes down the coordinates of the circles,
         # it should also pass down any user selections
         # to do that it needs to return all the coordinate c
-        # x, y, image, dist = triangulate_circles(circles, image)
+        x, y, image, dist, coordinates = triangulate_circles(circles, image)
         # cv2.imshow('circles outlined', image)
-        # circles = x, y
-        return circles, image
+        circles = x, y
+        return circles, image, coordinates
     elif circles is None:
         print('there were no circles found')
-        return circles, image
+        return circles, image, circles
 
 
 # method for getting rings on the given frame
@@ -117,11 +121,11 @@ def get_detected_rings(image):
                                maxRadius=30)
     # convert to uint
     circles = np.uint16(np.around(circles))
-    coordinate_of_circles, image_with_circles = draw_the_circles(image, circles)
+    coordinate_of_circles, image_with_circles, prev_coordinates = draw_the_circles(image, circles)
     # cv2.imwrite('Test/generated_circles.jpg', image_with_circles)
     # cv2.imshow('generated circles', image_with_circles)
 
-    return coordinate_of_circles, image_with_circles
+    return coordinate_of_circles, image_with_circles, prev_coordinates
 
 
 def calibration(frame_input):
@@ -208,7 +212,7 @@ def get_video_feed(selection):
             break
         dst_image = calibration(frame)
         # need to calibrate camera before this runs
-        circle_coordinates, frame = get_detected_rings(dst_image)
+        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
         # cv2.imshow('generated circles feed', frame)
         # cv2.waitKey(0)
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
@@ -216,7 +220,7 @@ def get_video_feed(selection):
 
         # video.release()
         print("Video Feed Processing")
-        return circle_coordinates, frame
+        return circle_coordinates, frame, prev_coord
 
 
 # get_circles = get_video_feed(feed)

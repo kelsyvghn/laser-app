@@ -12,6 +12,7 @@ import tkinter
 
 
 def triangulate_circles(coordinates, copy):
+    print('coordinates passed to triangulate', coordinates)
     # create an if statement that allows for if len(coordinates is < 2 OR if the user has provided coordinates
     while len(coordinates) >= 2:
 
