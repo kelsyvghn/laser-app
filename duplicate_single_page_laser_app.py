@@ -5,10 +5,9 @@ import glob
 
 
 def triangulate_circles(coordinates, copy):
-    # print('coordinates passed through', coordinates)
+    print('coordinates passed through', coordinates)
     # create an if statement that allows for if len(coordinates is < 2 OR if the user has provided coordinates
     while len(coordinates) >= 2:
-
         for i in range(len(coordinates) - 1):
             x1 = coordinates[i][0]
             y1 = coordinates[i][1]
@@ -21,7 +20,7 @@ def triangulate_circles(coordinates, copy):
         # print('d is', d)
 
         x3, y3, image = get_point(x1, y1, x2, y2, copy)
-        cv2.putText(image, f'coordinates: {x3, y3}.', (x3, y3), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 1)
+        cv2.putText(image, f'coordinates: {x3, y3}.', (x3, y3), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
         results = (x3, y3, image, d, coordinates)
         return results
     else:
@@ -218,8 +217,8 @@ def get_video_feed(selection):
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
         #     round((dist * 0.2645833333), 3)) + 'mm'
 
-        # video.release()
-        print("Video Feed Processing")
+        video.release()
+        # print("Video Feed Processing")
         return circle_coordinates, frame, prev_coord
 
 

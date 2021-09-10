@@ -1,5 +1,6 @@
 # This is a sample Python script.
 import tkinter as tk
+from tkinter import *
 from PIL import ImageTk, Image
 from duplicate_single_page_laser_app import *
 
@@ -20,7 +21,6 @@ def main():
     source_options = ['computer webcam', 'laser webcam', 'local']
 
     def change_feed():
-
         tk.Label.config(text=video_stream(feed_selection.get()))
 
     feed_selection = tk.StringVar()
@@ -34,51 +34,48 @@ def main():
     label = tk.Label(root, text=" ")
     label.pack()
 
-    def selected(user_list):
-        count = 0
-        selections = []
-        for i in user_list.curselection():
-            selections.append(count, i)
-            count += 1
-        return selections
+    # instantiates a list box to display found coordinates
+    user_selection_list = tk.Listbox(root, selectmode="multiple")
+    user_selection_list.pack(fill='both')
+    selected = tk.StringVar()
 
-    def run_user_calculations(input_coordinates, video):
-        user_selection_list = tk.Listbox(root, selectmode="multiple")
-        user_selection_list.pack(fill='both')
-        # coord is the list, already created/returned from the previous run of the video feed
-        count = 0
-        for each_coord in range(len(input_coordinates)):
-            user_selection_list.insert(count, input_coordinates[each_coord])
-            count += 1
+    def get_selected():
+        ### !!! this is returning an error...
+        selected_items = []
+        for item in user_selection_list.curselection():
+            selection = user_selection_list.get(item)
+            selected_items.append(selection)
 
-        find_selected = selected(user_selection_list)
-        user_calculation = triangulate_circles(find_selected, video)
-        print('find selected', find_selected)
-        print('user selection list', user_selection_list)
-        print('user_calculations', user_calculation)
-        coord_selection_btn = tk.Button(root, text='run calculations with selected', width=30,
-                                        command=user_calculation).pack()
-        return user_calculation
+            # issue with the output of item, which is an array, but somehow gets converted to a string
+        for coord in selected_items:
+            print('selected items coord', coord)
 
-    def video_stream(source):
-        if source == 'computer webcam':
-            print('computer webcam was source', source)
-            source = 0
-            # triangulation, frame, text, results = get_video_feed(source)
-            circles, frame, coord = get_video_feed(source)
-        elif source == 'laser webcam':
+        return selected_items
+
+    def user_calculations(image):
+        # # goes through the listbox to see which coordinates the user selected
+        # needs to wait until user selects something...
+        user_selection = get_selected()
+        triangulate_coords = triangulate_circles(user_selection, image)
+        return triangulate_coords
+
+    def video_stream(feed_source):
+
+        if feed_source == 'computer webcam':
+            print('computer webcam was feed_source', feed_source)
+            feed_source = 0
+            circles, frame, coord = get_video_feed(feed_source)
+        elif feed_source == 'laser webcam':
             # change back to 1 when program is set to run
-            # feed = '/Users/kelsyvaughn/Local/Code/Laser_App/Media/MyOutputVid5.avi'
-            source = 1
-            # triangulation, frame, text, results = get_video_feed(source)
-            circles, frame, coord = get_video_feed(source)
-        elif source == 'local':
-            source = feed
-            # triangulation, frame, text, results = get_video_feed(source)
-            circles, frame, coord = get_video_feed(source)
+            feed_source = feed
+            # feed_source = 1
+            circles, frame, coord = get_video_feed(feed_source)
+        elif feed_source == 'local':
+            feed_source = feed
+            circles, frame, coord = get_video_feed(feed_source)
         else:
-            # triangulation, frame, text, results = get_video_feed(source)
-            circles, frame, coord = get_video_feed(source)
+            feed_source = feed
+            circles, frame, coord = get_video_feed(feed_source)
 
         # _, frame = cap.read()
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -86,11 +83,17 @@ def main():
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
-        lmain.after(1, video_stream)
-        # user_results = run_user_calculations(coord, frame)
+        # lmain.after(1, video_stream)
 
-        # user_calculation_btn = tk.Button(root, text='select individual coordinates', width=30,
-        #                                  command=run_user_calculations(coord, frame)).pack()
+        # coord is the list, already created/returned from the previous run of the video feed
+        # loops through each found coordinate and displays in listbox
+        for each_coord in range(len(coord)):
+            # print('this is the coord', coord[each_coord])
+            user_selection_list.insert(tk.END, coord[each_coord])
+
+        # print('user selection results', user_selection)
+        selection_btn = tk.Button(root, text='select coordinates and click to process', width=30,
+                                  command=lambda: user_calculations(frame)).pack()
 
         # print('this is what coord returns', coord)
 
