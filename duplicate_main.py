@@ -37,26 +37,24 @@ def main():
     # instantiates a list box to display found coordinates
     user_selection_list = tk.Listbox(root, selectmode="multiple")
     user_selection_list.pack(fill='both')
-    selected = tk.StringVar()
+
+    # selected = tk.StringVar()
 
     def get_selected():
         ### !!! this is returning an error...
         selected_items = []
         for item in user_selection_list.curselection():
-            selection = user_selection_list.get(item)
-            selected_items.append(selection)
-
-            # issue with the output of item, which is an array, but somehow gets converted to a string
-        for coord in selected_items:
-            print('selected items coord', coord)
-
+            # selection = user_selection_list.get(item)
+            selected_items.append(item)
+        print('items selected', selected_items)
+        # issue with the output of item, which is an array, but somehow gets converted to a string
         return selected_items
 
-    def user_calculations(image):
+    def user_calculations(coordinates, image):
         # # goes through the listbox to see which coordinates the user selected
         # needs to wait until user selects something...
         user_selection = get_selected()
-        triangulate_coords = triangulate_circles(user_selection, image)
+        triangulate_coords = triangulate_user_selection(coordinates, user_selection, image)
         return triangulate_coords
 
     def video_stream(feed_source):
@@ -93,7 +91,7 @@ def main():
 
         # print('user selection results', user_selection)
         selection_btn = tk.Button(root, text='select coordinates and click to process', width=30,
-                                  command=lambda: user_calculations(frame)).pack()
+                                  command=lambda: user_calculations(coord, frame)).pack()
 
         # print('this is what coord returns', coord)
 
