@@ -2,20 +2,12 @@ import cv2
 import numpy as np
 import math as m
 import glob
-import tkinter
-
-
-# running webcam
-# feed = cv2.VideoCapture(1)
-# running internal video
-# feed = cv2.VideoCapture('/Users/kelsyvaughn/Local/Code/Laser_App/Media/MyOutputVid6.avi')
 
 
 def triangulate_circles(coordinates, copy):
-    print('coordinates passed to triangulate', coordinates)
+    print('coordinates passed through', coordinates)
     # create an if statement that allows for if len(coordinates is < 2 OR if the user has provided coordinates
-    while len(coordinates) >= 2:
-
+    while len(coordinates) > 2:
         for i in range(len(coordinates) - 1):
             x1 = coordinates[i][0]
             y1 = coordinates[i][1]
@@ -28,9 +20,12 @@ def triangulate_circles(coordinates, copy):
         # print('d is', d)
 
         x3, y3, image = get_point(x1, y1, x2, y2, copy)
-        return x3, y3, image, d
+        cv2.putText(image, f'(x, y): {x3, y3}.', (x3, y3), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+        results = (x3, y3, image, d, coordinates)
+        return results
     else:
-        return 0, 0, copy, 0
+        results = None
+        return results
 
 
 def get_point(x1, y1, x2, y2, image):
@@ -63,12 +58,39 @@ def get_point(x1, y1, x2, y2, image):
     cv2.putText(image, "Triangulation Point", (xp - 25, yp - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                 (255, 255, 0),
                 2)
-    cv2.rectangle(image, (cx - 5, cy - 5), (cx + 5, cy + 5), (255, 255, 0), -2)
-    cv2.putText(image, "Centroid of Triangle", (cx - 25, cy - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                (255, 255, 0),
-                2)
+    # cv2.rectangle(image, (cx - 5, cy - 5), (cx + 5, cy + 5), (255, 255, 0), -2)
+    # cv2.putText(image, "Centroid of Triangle", (cx - 25, cy - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+    #             (255, 255, 0),
+    #             2)
 
     return xp, yp, image
+
+
+def triangulate_user_selection(coordinates, indexes, copy):
+    print('coordinates passed through', coordinates, indexes)
+    # the original coordinates are passed through, along with the indexes
+    # that the user has chosen
+    while len(coordinates) >= 2:
+        # x1, y1 will be the first index that the user passed down, etc
+        x1 = coordinates[indexes[0]][0]
+        y1 = coordinates[indexes[0]][1]
+        x2 = coordinates[indexes[1]][0]
+        y2 = coordinates[indexes[1]][1]
+        print('user selected coordinates: ', ((x1, y1), (x2, y2)))
+        angle = 60
+        ax = x2 - x1
+        by = y2 - y1
+        d = m.sqrt(m.pow(ax, 2) + m.pow(by, 2) - (2 * ax * by) * m.cos(angle)) * 81.73 / 1000
+        # print('d is', d)
+
+        x3, y3, image = get_point(x1, y1, x2, y2, copy)
+        cv2.putText(image, f'(x, y): {x3, y3}.', (x3, y3), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+        results = (x3, y3, image, d, coordinates)
+        cv2.imshow('user selected coordinates triangulation', copy)
+        return results
+    else:
+        results = None
+        return results
 
 
 # draw circles onto the video frames, image by image
@@ -82,25 +104,55 @@ def draw_the_circles(image, circles):
             cv2.circle(image, (x, y), r, (0, 255, 0), 2)
             cv2.rectangle(image, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
             # this will print the coordinates on each circle
-            cv2.putText(image, f'this coordinate is approximately {x, y}.', (x, y), cv2.FONT_HERSHEY_PLAIN, 0.5, (0, 255, 255), 2)
+            cv2.putText(image, f'coordinates: {x, y}.', (x, y), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255), 1)
         # this next function call passes down the coordinates of the circles,
         # it should also pass down any user selections
         # to do that it needs to return all the coordinate c
-        x, y, image, dist = triangulate_circles(circles, image)
+        # x, y, image, dist, coordinates = triangulate_circles(circles, image)
         # cv2.imshow('circles outlined', image)
-        circles = x, y
-        return circles, image, dist
+        # circles = x, y
+        # removed triangulation process here to avoid overlay and allow only for user selection of coordinates
+        # return circles, image, coordinates
+        return circles, image, circles
     elif circles is None:
         print('there were no circles found')
-        return circles, image, 0
+        return circles, image, circles
 
 
 # method for getting rings on the given frame
 def get_detected_rings(image):
-    # blur image a bit to tone down brightness
-    blur = cv2.GaussianBlur(image, (15, 15), 1)
+    # brightness and contrast controls
 
+    new_image = np.zeros(image.shape, image.dtype)
+    alpha = 1.0  # Simple contrast control
+    beta = 0  # Simple brightness control
+    # Initialize values
+    # print(' Basic Linear Transforms ')
+    # print('-------------------------')
+    # try:
+    #     # will need to pass down variables from main into these (instead of command line input)
+    #     # alpha = float(input('* Enter the alpha value [1.0-3.0]: '))
+    #     # beta = int(input('* Enter the beta value [0-100]: '))
+    #     alpha = 1.0
+    #     beta = 0
+    # except ValueError:
+    #     print('Error, not a number')
+    # Do the operation new_image(i,j) = alpha*image(i,j) + beta
+    # Instead of these 'for' loops we could have used simply:
+    # new_image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    # but we wanted to show you how to access the pixels :)
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            for c in range(image.shape[2]):
+                new_image[y, x, c] = np.clip(alpha * image[y, x, c] + beta, 0, 255)
+
+    # blur image a bit to tone down brightness on particular portions
+    # 1 add a control for this
+    # was 15
+    blur = cv2.GaussianBlur(new_image, (5, 5), 1)
+    # ***** 2 ***** add a control for this
     lower_green = np.array([10, 10, 0])
+    # ***** 3 ***** add a control for this
     upper_green = np.array([25, 25, 255])
     mask = cv2.inRange(blur, lower_green, upper_green)
     masked_image = cv2.bitwise_and(image, image, mask=mask)
@@ -109,6 +161,7 @@ def get_detected_rings(image):
     height, width, rgb = image.shape
 
     x = np.zeros([height, width], dtype='uint8')
+    # ***** 4 ***** add a control for this, in case frame is too small/large
     mask_outer = cv2.rectangle(x, (100, 100), (450, 450), (255, 255, 255), -1)
     masked_outer = cv2.bitwise_and(masked_image, masked_image, mask=mask_outer)
 
@@ -125,14 +178,15 @@ def get_detected_rings(image):
                                maxRadius=30)
     # convert to uint
     circles = np.uint16(np.around(circles))
-    triangulated, image_with_circles, dist = draw_the_circles(image, circles)
+    coordinate_of_circles, image_with_circles, prev_coordinates = draw_the_circles(image, circles)
     # cv2.imwrite('Test/generated_circles.jpg', image_with_circles)
     # cv2.imshow('generated circles', image_with_circles)
 
-    return triangulated, image_with_circles, dist
+    return coordinate_of_circles, image_with_circles, prev_coordinates
 
 
 def calibration(frame_input):
+    # ***** 5 ***** create a yaml file for this
     chessboardSize = (4, 3)
     frameSize = (640, 480)
 
@@ -216,15 +270,15 @@ def get_video_feed(selection):
             break
         dst_image = calibration(frame)
         # need to calibrate camera before this runs
-        triangulation, frame, dist = get_detected_rings(dst_image)
+        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
         # cv2.imshow('generated circles feed', frame)
         # cv2.waitKey(0)
-        results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
-            round((dist * 0.2645833333), 3)) + 'mm'
+        # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
+        #     round((dist * 0.2645833333), 3)) + 'mm'
 
-        # video.release()
-        text = "Video Feed Processing"
-        return triangulation, frame,  text, results
+        video.release()
+        # print("Video Feed Processing")
+        return circle_coordinates, frame, prev_coord
 
 
 # get_circles = get_video_feed(feed)

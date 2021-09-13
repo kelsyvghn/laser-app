@@ -40,10 +40,12 @@ def main():
             source = 0
             triangulation, frame, text, results = get_video_feed(source)
         elif source == 'laser webcam':
+            # change back to 1 when program is set to run
+            # feed = '/Users/kelsyvaughn/Local/Code/Laser_App/Media/MyOutputVid5.avi'
             source = 1
             triangulation, frame, text, results = get_video_feed(source)
         elif source == 'other':
-            source = 3
+            source = 2
             triangulation, frame, text, results = get_video_feed(source)
         else:
             triangulation, frame, text, results = get_video_feed(source)
