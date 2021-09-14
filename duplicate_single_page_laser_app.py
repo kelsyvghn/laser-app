@@ -40,24 +40,26 @@ def get_point(x1, y1, x2, y2, image):
     # rotate the displacement vector and add the result back to the original point
     xp = x1 + m.cos(alpha) * dx + m.sin(alpha) * dy
     yp = y1 + m.sin(-alpha) * dx + m.cos(alpha) * dy
-
-    # if the above are out of range, ie they're outside the mask, process the inverse
-    if xp < 200 or xp > 600 or yp < 100 or yp > 500:
-        xp = x1 + m.cos(alpha) * dx + m.sin(-alpha) * dy
-        yp = y1 + m.sin(alpha) * dx + m.cos(alpha) * dy
-
+    print('first xp and yp output', (xp, yp))
+    # # if the above are out of range, ie they're outside the mask, process the inverse
+    # if xp < 100 or xp > 450 or yp < 100 or yp > 450:
+    #     print('outside mask, triangulation was flipped')
+    #     xp = x1 + m.cos(alpha) * dx + m.sin(-alpha) * dy
+    #     yp = y1 + m.sin(alpha) * dx + m.cos(alpha) * dy
+    # print('second xp and yp output', (xp, yp))
+    # reduces the decimal points to 2
     xp = int(xp)
     yp = int(yp)
+    print('third xp and yp output', (xp, yp))
 
     # Formula to calculate centroid
-    cx = int(round((x1 + x2 + xp) / 3, 2))
-    cy = int(round((y1 + y2 + yp) / 3, 2))
+    # cx = int(round((x1 + x2 + xp) / 3, 2))
+    # cy = int(round((y1 + y2 + yp) / 3, 2))
 
     # print("Centroid ", (cx, cy))
     cv2.rectangle(image, (xp - 5, yp - 5), (xp + 5, yp + 5), (255, 255, 0), -2)
     cv2.putText(image, "Triangulation Point", (xp - 25, yp - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                (255, 255, 0),
-                2)
+                (255, 255, 0), 2)
     # cv2.rectangle(image, (cx - 5, cy - 5), (cx + 5, cy + 5), (255, 255, 0), -2)
     # cv2.putText(image, "Centroid of Triangle", (cx - 25, cy - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
     #             (255, 255, 0),
@@ -119,28 +121,27 @@ def draw_the_circles(image, circles):
         return circles, image, circles
 
 
-# method for getting rings on the given frame
-def get_detected_rings(image, val1, val2):
+def user_adjustments(image, contrast_value, bright_value):
     # brightness and contrast controls
-
-    new_image = np.zeros(image.shape, image.dtype)
-
     # ***** 6 ***** create user control sliders for this
+
+
+
     # alpha = val1  # Simple contrast control
     # beta = val2  # Simple brightness control
     # Initialize values
-    # print(' Basic Linear Transforms ')
-    # print('-------------------------')
+    print(' Basic Linear Transforms ')
+    print('-------------------------')
     try:
         # will need to pass down variables from main into these (instead of command line input)
-        alpha = float(val1)
-        beta = int(val2)
-        # alpha = val1
-        # beta = val2
+        # alpha = 1.4
+        # beta = 40
+        alpha = contrast_value
+        beta = bright_value
 
     except ValueError:
         print('Error, not a number')
-    print('current val1 and val2 values: ', (val1, val2))
+    # print('current val1 and val2 values: ', (val1, val2))
 
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
     # Instead of these 'for' loops we could have used simply:
@@ -152,9 +153,13 @@ def get_detected_rings(image, val1, val2):
     #             new_image[y, x, c] = np.clip(alpha * image[y, x, c] + beta, 0, 255)
 
     # blur image a bit to tone down brightness on particular portions
+# method for getting rings on the given frame
+# def get_detected_rings(image, val1, val2):
+def get_detected_rings(image):
+    new_image = np.zeros(image.shape, image.dtype)
     # 1 add a control for this
     # was 15
-    blur = cv2.GaussianBlur(new_image, (5, 5), 1)
+    blur = cv2.GaussianBlur(image, (5, 5), 1)
     # ***** 2 ***** add a control for this
     lower_green = np.array([10, 10, 0])
     # ***** 3 ***** add a control for this
@@ -265,7 +270,9 @@ def calibration(frame_input):
     return dst
 
 
-def get_video_feed(selection, value1, value2):
+# def get_video_feed(selection, value1, value2):
+def get_video_feed(selection):
+
     video = cv2.VideoCapture(selection)
     while video.isOpened():
 
@@ -275,7 +282,8 @@ def get_video_feed(selection, value1, value2):
             break
         dst_image = calibration(frame)
         # need to calibrate camera before this runs
-        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image, value1, value2)
+        # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image, value1, value2)
+        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
         # cv2.imshow('generated circles feed', frame)
         # cv2.waitKey(0)
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
