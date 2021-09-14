@@ -120,31 +120,36 @@ def draw_the_circles(image, circles):
 
 
 # method for getting rings on the given frame
-def get_detected_rings(image):
+def get_detected_rings(image, val1, val2):
     # brightness and contrast controls
 
     new_image = np.zeros(image.shape, image.dtype)
-    alpha = 1.0  # Simple contrast control
-    beta = 0  # Simple brightness control
+
+    # ***** 6 ***** create user control sliders for this
+    # alpha = val1  # Simple contrast control
+    # beta = val2  # Simple brightness control
     # Initialize values
     # print(' Basic Linear Transforms ')
     # print('-------------------------')
-    # try:
-    #     # will need to pass down variables from main into these (instead of command line input)
-    #     # alpha = float(input('* Enter the alpha value [1.0-3.0]: '))
-    #     # beta = int(input('* Enter the beta value [0-100]: '))
-    #     alpha = 1.0
-    #     beta = 0
-    # except ValueError:
-    #     print('Error, not a number')
+    try:
+        # will need to pass down variables from main into these (instead of command line input)
+        alpha = float(val1)
+        beta = int(val2)
+        # alpha = val1
+        # beta = val2
+
+    except ValueError:
+        print('Error, not a number')
+    print('current val1 and val2 values: ', (val1, val2))
+
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
     # Instead of these 'for' loops we could have used simply:
-    # new_image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
     # but we wanted to show you how to access the pixels :)
-    for y in range(image.shape[0]):
-        for x in range(image.shape[1]):
-            for c in range(image.shape[2]):
-                new_image[y, x, c] = np.clip(alpha * image[y, x, c] + beta, 0, 255)
+    # for y in range(image.shape[0]):
+    #     for x in range(image.shape[1]):
+    #         for c in range(image.shape[2]):
+    #             new_image[y, x, c] = np.clip(alpha * image[y, x, c] + beta, 0, 255)
 
     # blur image a bit to tone down brightness on particular portions
     # 1 add a control for this
@@ -255,12 +260,12 @@ def calibration(frame_input):
         error = cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2) / len(imgpoints2)
         mean_error += error
 
-    # print("total error: {}".format(mean_error / len(objpoints)))
+    print("total error: {}".format(mean_error / len(objpoints)))
 
     return dst
 
 
-def get_video_feed(selection):
+def get_video_feed(selection, value1, value2):
     video = cv2.VideoCapture(selection)
     while video.isOpened():
 
@@ -270,7 +275,7 @@ def get_video_feed(selection):
             break
         dst_image = calibration(frame)
         # need to calibrate camera before this runs
-        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
+        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image, value1, value2)
         # cv2.imshow('generated circles feed', frame)
         # cv2.waitKey(0)
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
