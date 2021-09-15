@@ -160,12 +160,12 @@ def get_detected_rings(image):
     cv2.imwrite('Test/input_img.jpg', image)
     # 1 add a control for this ?
     # was 15
-    blur = cv2.GaussianBlur(image, (3, 3), 1)
+    blur = cv2.GaussianBlur(image, (5, 5), 1)
     cv2.imwrite('Test/blur_img.jpg', blur)
     # ***** 2 ***** add a control for this color order is BGR (Blue, Green, Red)
-    lower_green = np.array([18, 18, 0])
+    lower_green = np.array([0, 0, 0])
     # ***** 3 ***** add a control for this
-    upper_green = np.array([50, 50, 255])
+    upper_green = np.array([255, 255, 255])
     mask = cv2.inRange(blur, lower_green, upper_green)
     cv2.imwrite('Test/mask_img.jpg', mask)
     masked_image = cv2.bitwise_and(image, image, mask=mask)
