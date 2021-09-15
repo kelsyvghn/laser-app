@@ -26,7 +26,7 @@ def main():
     contrast_value = 1.0
 
     bright_value = tk.IntVar()
-    bright_value = 0
+    bright_value = 100
 
     contrast_label = tk.Label(root, text="Contrast")
     contrast_label.pack()

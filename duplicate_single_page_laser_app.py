@@ -135,7 +135,7 @@ def user_adjustments(image, contrast_value, bright_value):
         # beta = 40
         alpha = contrast_value
         beta = bright_value
-        gamma = 0.4
+        gamma = 2.5
 
     except ValueError:
         print('Error, not a number')
@@ -281,8 +281,9 @@ def get_video_feed(selection):
         dst_image = calibration(frame)
         # need to calibrate camera before this runs
         # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image, value1, value2)
-        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
-        # cv2.imshow('generated circles feed', frame)
+        # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
+        circle_coordinates, frame, prev_coord = [], frame, []
+        cv2.imshow('generated circles feed', dst_image)
         # cv2.waitKey(0)
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
         #     round((dist * 0.2645833333), 3)) + 'mm'
