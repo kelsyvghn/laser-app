@@ -274,6 +274,34 @@ def calibration(frame_input):
     return dst
 
 
+def find_camera_center(base_image):
+    grey_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite('Test/camera_grey_image.jpg', grey_image)
+    # convert image to binary
+    ret, thresh = cv2.threshold(grey_image, 127, 255, 0)
+    # # find contours in the binary image
+    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # for c in contours:
+    #     # calculate moments for each contour
+    #     moment = cv2.moments(c)
+    #     # calculate x,y coordinate of center
+    #     c_x = int(moment["m10"] / moment["m00"])
+    #     c_y = int(moment["m01"] / moment["m00"])
+    #     # print('camera center: X:{}, Y:{}'.format(cX, cY))
+    #     cv2.circle(base_image, (c_x, c_y), 5, (255, 255, 255), -1)
+    #     cv2.putText(base_image, "Camera Center", (c_x - 25, c_y - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255),
+    #                 2)
+    #     coordinates = c_x, c_y
+    #     # display the image
+    #     # cv2.imshow("Center of Circle Image", base_image)
+    h, w = base_image.shape[:2]
+    coordinates = h/2, w/2
+    print('coordinates of camera: ', coordinates)
+        # difference = compare_points(output_image, coordinates)
+
+    return coordinates
+
+
 # def get_video_feed(selection, value1, value2):
 def get_video_feed(selection, contrast_value, bright_value):
     video = cv2.VideoCapture(selection)
@@ -292,16 +320,17 @@ def get_video_feed(selection, contrast_value, bright_value):
         # need to calibrate camera before this runs
         # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image, value1, value2)
         # cv2.imshow('generated circles feed', dst_image)
-        cv2.imwrite('Test/dst_image.jpg', dst_image)
-        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
+        # cv2.imwrite('Test/dst_image.jpg', dst_image)
+        circle_coordinates, return_frame, prev_coord = get_detected_rings(dst_image)
+        camera_coordinates = find_camera_center(frame)
         # circle_coordinates, frame, prev_coord = [], frame, []
-        # cv2.imshow('generated circles feed', dst_image)
+        # cv2.imshow('camera center', camera_coordinates)
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
         #     round((dist * 0.2645833333), 3)) + 'mm'
 
         video.release()
         # print("Video Feed Processing")
-        return circle_coordinates, frame, prev_coord
+        return circle_coordinates, return_frame, prev_coord, camera_coordinates
 
 
 # get_circles = get_video_feed(feed)

@@ -71,7 +71,6 @@ def main():
     user_selection_list = tk.Listbox(root, selectmode="multiple")
     user_selection_list.grid(row=4, column=1, sticky=W, pady=2)
 
-
     def get_selected():
         selected_items = []
         for item in user_selection_list.curselection():
@@ -91,28 +90,28 @@ def main():
 
         if feed_source == 'computer webcam':
             feed_source = 0
-            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
-                                                   user_selected_brightness)
+            circles, frame, coord, camera_center = get_video_feed(feed_source, user_selected_contrast,
+                                                                  user_selected_brightness)
             # circles, frame, coord = get_video_feed(feed_source)
 
         elif feed_source == 'laser webcam':
             # change back to 1 when program is set to run
             feed_source = 1
             # feed_source = 1
-            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
-                                                   user_selected_brightness)
+            circles, frame, coord, camera_center = get_video_feed(feed_source, user_selected_contrast,
+                                                                  user_selected_brightness)
             # circles, frame, coord = get_video_feed(feed_source)
 
         elif feed_source == 'local':
             feed_source = feed
-            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
-                                                   user_selected_brightness)
+            circles, frame, coord, camera_center = get_video_feed(feed_source, user_selected_contrast,
+                                                                  user_selected_brightness)
             # circles, frame, coord = get_video_feed(feed_source)
 
         else:
             feed_source = feed
-            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
-                                                   user_selected_brightness)
+            circles, frame, coord, camera_center = get_video_feed(feed_source, user_selected_contrast,
+                                                                  user_selected_brightness)
             # circles, frame, coord = get_video_feed(feed_source)
 
         # _, frame = cap.read()
@@ -131,7 +130,8 @@ def main():
         # should couple this with the ability to run video feed first, then run the circle finder portion/triangulation
 
         selection_btn = tk.Button(root, text='select coordinates and click to process', width=30,
-                                  command=lambda: user_calculations(coord, frame)).grid(row=6, column=1, sticky=W, pady=2)
+                                  command=lambda: user_calculations(coord, frame)).grid(row=6, column=1, sticky=W,
+                                                                                        pady=2)
 
         # print('this is what coord returns', coord)
 
