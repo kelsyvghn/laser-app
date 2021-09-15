@@ -135,7 +135,7 @@ def user_adjustments(image, contrast_value, bright_value):
         # beta = 40
         alpha = contrast_value
         beta = bright_value
-        gamma = 2.5
+        # gamma = 2.5
 
     except ValueError:
         print('Error, not a number')
@@ -143,7 +143,7 @@ def user_adjustments(image, contrast_value, bright_value):
 
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
     # Instead of these 'for' loops we could have used simply:
-    new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta, gamma=gamma)
+    new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
     # but we wanted to show you how to access the pixels :)
     # for y in range(image.shape[0]):
     #     for x in range(image.shape[1]):
@@ -159,9 +159,9 @@ def get_detected_rings(image):
     # was 15
     blur = cv2.GaussianBlur(image, (5, 5), 1)
     # ***** 2 ***** add a control for this
-    lower_green = np.array([10, 10, 0])
+    lower_green = np.array([18, 18, 0])
     # ***** 3 ***** add a control for this
-    upper_green = np.array([25, 25, 255])
+    upper_green = np.array([50, 50, 255])
     mask = cv2.inRange(blur, lower_green, upper_green)
     masked_image = cv2.bitwise_and(image, image, mask=mask)
 
@@ -281,9 +281,9 @@ def get_video_feed(selection):
         dst_image = calibration(frame)
         # need to calibrate camera before this runs
         # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image, value1, value2)
-        # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
-        circle_coordinates, frame, prev_coord = [], frame, []
-        cv2.imshow('generated circles feed', dst_image)
+        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
+        # circle_coordinates, frame, prev_coord = [], frame, []
+        # cv2.imshow('generated circles feed', dst_image)
         # cv2.waitKey(0)
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
         #     round((dist * 0.2645833333), 3)) + 'mm'

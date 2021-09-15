@@ -23,7 +23,7 @@ def main():
     # give user option to adjust camera brightness
     # contrast and brightness sliders
     contrast_value = tk.DoubleVar()
-    contrast_value = 1.0
+    contrast_value = 3.0
 
     bright_value = tk.IntVar()
     bright_value = 100
