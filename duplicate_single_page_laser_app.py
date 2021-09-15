@@ -135,35 +135,41 @@ def user_adjustments(image, contrast_value, bright_value):
         # beta = 40
         alpha = contrast_value
         beta = bright_value
-        gamma = 2.5
 
     except ValueError:
         print('Error, not a number')
-    # print('current val1 and val2 values: ', (val1, val2))
+    print('current user adjustment values: ', (alpha, beta))
 
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
     # Instead of these 'for' loops we could have used simply:
-    new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta, gamma=gamma)
+    new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
     # but we wanted to show you how to access the pixels :)
     # for y in range(image.shape[0]):
     #     for x in range(image.shape[1]):
     #         for c in range(image.shape[2]):
     #             new_image[y, x, c] = np.clip(alpha * image[y, x, c] + beta, 0, 255)
+    return new_image
 
     # blur image a bit to tone down brightness on particular portions
+
+
 # method for getting rings on the given frame
 # def get_detected_rings(image, val1, val2):
 def get_detected_rings(image):
-    new_image = np.zeros(image.shape, image.dtype)
-    # 1 add a control for this
+    # new_image = np.zeros(image.shape, image.dtype)
+    cv2.imwrite('Test/input_img.jpg', image)
+    # 1 add a control for this ?
     # was 15
-    blur = cv2.GaussianBlur(image, (5, 5), 1)
-    # ***** 2 ***** add a control for this
-    lower_green = np.array([10, 10, 0])
+    blur = cv2.GaussianBlur(image, (3, 3), 1)
+    cv2.imwrite('Test/blur_img.jpg', blur)
+    # ***** 2 ***** add a control for this color order is BGR (Blue, Green, Red)
+    lower_green = np.array([18, 18, 0])
     # ***** 3 ***** add a control for this
-    upper_green = np.array([25, 25, 255])
+    upper_green = np.array([50, 50, 255])
     mask = cv2.inRange(blur, lower_green, upper_green)
+    cv2.imwrite('Test/mask_img.jpg', mask)
     masked_image = cv2.bitwise_and(image, image, mask=mask)
+    cv2.imwrite('Test/masked_img.jpg', masked_image)
 
     # mask outer area
     height, width, rgb = image.shape
@@ -175,11 +181,11 @@ def get_detected_rings(image):
 
     # turn image to greyscale
     grey_image = cv2.cvtColor(masked_outer, cv2.COLOR_BGR2GRAY)
-    # cv2.imwrite('Test/grey_image.jpg', grey_image)
+    cv2.imwrite('Test/grey_image.jpg', grey_image)
 
     # use Canny's edge detection to detect edges
     canny_image = cv2.Canny(grey_image, 7, 9)
-    # cv2.imwrite('Test/canny_image.jpg', canny_image)
+    cv2.imwrite('Test/canny_image.jpg', canny_image)
 
     # generate circles on the image
     circles = cv2.HoughCircles(canny_image, cv2.HOUGH_GRADIENT, 2.75, 75, param1=300, param2=150, minRadius=10,
@@ -187,7 +193,7 @@ def get_detected_rings(image):
     # convert to uint
     circles = np.uint16(np.around(circles))
     coordinate_of_circles, image_with_circles, prev_coordinates = draw_the_circles(image, circles)
-    # cv2.imwrite('Test/generated_circles.jpg', image_with_circles)
+    cv2.imwrite('Test/generated_circles.jpg', image_with_circles)
     # cv2.imshow('generated circles', image_with_circles)
 
     return coordinate_of_circles, image_with_circles, prev_coordinates
@@ -269,8 +275,7 @@ def calibration(frame_input):
 
 
 # def get_video_feed(selection, value1, value2):
-def get_video_feed(selection):
-
+def get_video_feed(selection, contrast_value, bright_value):
     video = cv2.VideoCapture(selection)
     while video.isOpened():
 
@@ -278,13 +283,19 @@ def get_video_feed(selection):
 
         if not is_grabbed:
             break
+
+        # new_image = user_adjustments(frame, contrast_value, bright_value)
+        # cv2.imshow('user adjusted image', new_image)
+        # cv2.waitKey(1)
         dst_image = calibration(frame)
+
         # need to calibrate camera before this runs
         # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image, value1, value2)
-        # circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
-        circle_coordinates, frame, prev_coord = [], frame, []
-        cv2.imshow('generated circles feed', dst_image)
-        # cv2.waitKey(0)
+        # cv2.imshow('generated circles feed', dst_image)
+        cv2.imwrite('Test/dst_image.jpg', dst_image)
+        circle_coordinates, frame, prev_coord = get_detected_rings(dst_image)
+        # circle_coordinates, frame, prev_coord = [], frame, []
+        # cv2.imshow('generated circles feed', dst_image)
         # results = 'the distance between circle centers is: ' + str(round(dist, 3)) + ' or approximately 0' + str(
         #     round((dist * 0.2645833333), 3)) + 'mm'
 

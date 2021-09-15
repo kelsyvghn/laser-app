@@ -13,65 +13,64 @@ def main():
     root = tk.Tk()
     root.title("Laser Camera Feed")
     app = tk.Frame(root, borderwidth=4, bg="black")
-    app.pack()
+    app.grid()
     # Create a label in the frame
     lmain = tk.Label(app)
-    lmain.pack()
+    lmain.grid()
 
     source_options = ['computer webcam', 'laser webcam', 'local']
 
     # give user option to adjust camera brightness
     # contrast and brightness sliders
     contrast_value = tk.DoubleVar()
-    contrast_value = 1.0
+    contrast_value.set(1.4)
 
     bright_value = tk.IntVar()
-    bright_value = 100
+    bright_value.set(40)
 
-    contrast_label = tk.Label(root, text="Contrast")
-    contrast_label.pack()
     contrast_slider = tk.Scale(
         root,
         from_=1.0,
         to=3.0,
-        orient='horizontal'
+        resolution=0.01,
+        orient='horizontal',
+        label="Contrast"
     )
     print('contrast value', contrast_value)
-    contrast_slider.pack()
-    #
-    bright_label = tk.Label(root, text="Brightness")
-    bright_label.pack()
+    contrast_slider.grid(row=0, column=1, sticky=W, pady=2)
     bright_slider = tk.Scale(
         root,
         from_=0,
         to=100,
-        orient='horizontal'
+        orient='horizontal',
+        label="Brightness"
     )
     print('brightness value', bright_value)
-    bright_slider.pack()
-    user_selected_contrast = contrast_slider.get()
-    user_selected_brightness = bright_slider.get()
+    bright_slider.grid(row=2, column=1, sticky=W, pady=2)
+    user_selected_contrast = float(contrast_slider.get())
+    user_selected_brightness = int(bright_slider.get())
 
-
+    # slider_changes_btn = tk.Button(root, text='Adjust Brightness and Contrast',
+    #                                command=lambda: user_adjustments(user_selected_contrast,
+    #                                                                 user_selected_brightness, user_selected_gamma))
 
     def change_feed():
         tk.Label.config(text=video_stream(feed_selection.get()))
 
     feed_label = tk.Label(root, text="Feed Selection")
-    feed_label.pack()
+    feed_label.grid(row=1, column=0, pady=2)
     feed_selection = tk.StringVar()
     feed_selection.set('laser webcam')
 
     drop = tk.OptionMenu(root, feed_selection, *source_options)
-    drop.pack()
+    drop.grid(row=2, column=0, pady=2)
 
-    source_btn = tk.Button(root, text='Process Changes and Receive Feed', width=30, command=change_feed).pack()
+    source_btn = tk.Button(root, text='Run Feed', width=30, command=change_feed).grid(row=3, column=0, pady=2)
 
     # instantiates a list box to display found coordinates
     user_selection_list = tk.Listbox(root, selectmode="multiple")
-    user_selection_list.pack(fill='both')
+    user_selection_list.grid(row=4, column=1, sticky=W, pady=2)
 
-    # selected = tk.StringVar()
 
     def get_selected():
         selected_items = []
@@ -89,32 +88,32 @@ def main():
         return triangulate_coords
 
     def video_stream(feed_source):
-        slider_changes_btn = tk.Button(root, text='Adjust Brightness and Contrast',
-                                       command=lambda: user_adjustments(frame, user_selected_contrast,
-                                                                        user_selected_brightness))
 
         if feed_source == 'computer webcam':
-            # print('computer webcam was feed_source', feed_source, contrast_value, bright_value)
             feed_source = 0
-            # circles, frame, coord = get_video_feed(feed_source, contrast_value, bright_value)
-            circles, frame, coord = get_video_feed(feed_source)
+            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
+                                                   user_selected_brightness)
+            # circles, frame, coord = get_video_feed(feed_source)
 
         elif feed_source == 'laser webcam':
             # change back to 1 when program is set to run
-            feed_source = feed
+            feed_source = 1
             # feed_source = 1
-            # circles, frame, coord = get_video_feed(feed_source, contrast_value, bright_value)
-            circles, frame, coord = get_video_feed(feed_source)
+            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
+                                                   user_selected_brightness)
+            # circles, frame, coord = get_video_feed(feed_source)
 
         elif feed_source == 'local':
             feed_source = feed
-            # circles, frame, coord = get_video_feed(feed_source, contrast_value, bright_value)
-            circles, frame, coord = get_video_feed(feed_source)
+            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
+                                                   user_selected_brightness)
+            # circles, frame, coord = get_video_feed(feed_source)
 
         else:
             feed_source = feed
-            # circles, frame, coord = get_video_feed(feed_source, contrast_value, bright_value)
-            circles, frame, coord = get_video_feed(feed_source)
+            circles, frame, coord = get_video_feed(feed_source, user_selected_contrast,
+                                                   user_selected_brightness)
+            # circles, frame, coord = get_video_feed(feed_source)
 
         # _, frame = cap.read()
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -129,12 +128,10 @@ def main():
         for each_coord in range(len(coord)):
             # print('this is the coord', coord[each_coord])
             user_selection_list.insert(tk.END, coord[each_coord])
+        # should couple this with the ability to run video feed first, then run the circle finder portion/triangulation
 
-
-        # print('user selection results', user_selection)
         selection_btn = tk.Button(root, text='select coordinates and click to process', width=30,
-                                  command=lambda: user_calculations(coord, frame)).pack()
-
+                                  command=lambda: user_calculations(coord, frame)).grid(row=6, column=1, sticky=W, pady=2)
 
         # print('this is what coord returns', coord)
 
