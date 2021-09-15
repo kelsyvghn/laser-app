@@ -124,20 +124,18 @@ def draw_the_circles(image, circles):
 def user_adjustments(image, contrast_value, bright_value):
     # brightness and contrast controls
     # ***** 6 ***** create user control sliders for this
-
-
-
     # alpha = val1  # Simple contrast control
     # beta = val2  # Simple brightness control
     # Initialize values
-    print(' Basic Linear Transforms ')
-    print('-------------------------')
+    # print(' Basic Linear Transforms ')
+    # print('-------------------------')
     try:
         # will need to pass down variables from main into these (instead of command line input)
         # alpha = 1.4
         # beta = 40
         alpha = contrast_value
         beta = bright_value
+        gamma = 0.4
 
     except ValueError:
         print('Error, not a number')
@@ -145,7 +143,7 @@ def user_adjustments(image, contrast_value, bright_value):
 
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
     # Instead of these 'for' loops we could have used simply:
-    new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
+    new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta, gamma=gamma)
     # but we wanted to show you how to access the pixels :)
     # for y in range(image.shape[0]):
     #     for x in range(image.shape[1]):
