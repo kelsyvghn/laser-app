@@ -35,7 +35,7 @@ while True:
 
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
     # Instead of these 'for' loops we could have used simply:
-    new_image = cv.convertScaleAbs (frame, alpha=alpha, beta=beta)
+    new_image = cv.convertScaleAbs(frame, alpha=alpha, beta=beta)
 
     cv.imshow('frame', new_image)
     if cv.waitKey(1) == ord('q'):
